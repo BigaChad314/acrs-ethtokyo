@@ -32,7 +32,7 @@ const L2: React.FC<L2Props> = ({ nodeAddrsses }) => {
       const reputationsMap: { [address: string]: number } = {};
       for (const address of nodeAddrsses) {
         const reputation = await fetchReputation(contractAddress, address);
-        reputationsMap[address] = reputation;
+        reputationsMap[address] = Math.floor(reputation / 10 ** 16);
       }
       setReputations(reputationsMap);
     }
@@ -40,13 +40,71 @@ const L2: React.FC<L2Props> = ({ nodeAddrsses }) => {
     fetchAllReputations();
   }, [nodeAddrsses]);
 
+  const containerStyle = {
+    padding: "20px",
+    maxWidth: "600px",
+    margin: "auto",
+    backgroundColor: "#f9f9f9",
+    borderRadius: "10px",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+  };
+
+  const headerStyle = {
+    textAlign: "center" as const,
+    fontSize: "24px",
+    color: "#333",
+    marginBottom: "20px",
+  };
+
+  const welcomeStyle = {
+    textAlign: "center" as const,
+    fontSize: "32px",
+    fontWeight: "bold" as const,
+    color: "#4CAF50",
+    marginBottom: "30px",
+  };
+
+  const listStyle = {
+    listStyleType: "none" as const,
+    padding: 0,
+  };
+
+  const listItemStyle = {
+    backgroundColor: "#fff",
+    margin: "10px 0",
+    padding: "10px 15px",
+    borderRadius: "5px",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  };
+
+  const addressStyle = {
+    fontSize: "14px",
+    color: "#666",
+    wordBreak: "break-all" as const,
+    flex: 1,
+    marginRight: "10px",
+  };
+
+  const reputationStyle = {
+    fontSize: "16px",
+    fontWeight: "bold" as const,
+    color: "#333",
+  };
+
   return (
-    <div>
-      <h1>Node Reputations</h1>
-      <ul>
+    <div style={containerStyle}>
+      <h1 style={welcomeStyle}>Welcome to SCROLL L2: Using L1sload</h1>
+      <h1 style={headerStyle}>Node Reputations</h1>
+      <ul style={listStyle}>
         {nodeAddrsses.map((address, index) => (
-          <li key={index}>
-            {address}: {reputations[address] ?? "Loading..."}
+          <li key={index} style={listItemStyle}>
+            <span style={addressStyle}>{address}</span>
+            <span style={reputationStyle}>
+              {reputations[address] ?? "Loading..."}
+            </span>
           </li>
         ))}
       </ul>
