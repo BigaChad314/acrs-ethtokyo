@@ -17,7 +17,7 @@ const NodeComponent: React.FC<NodeProps> = ({
   onClick,
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
-  const radius = node.importance * 3; // importance에 비례해 크기를 조절
+  const radius = 6 * 3; // importance에 비례해 크기를 조절
   const [name, setName] = useState<string | null>(null);
 
   useEffect(() => {
