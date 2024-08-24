@@ -25,13 +25,13 @@ We tried to verify the contract, but it was a bit tricky, so instead, we are att
 We used ENS when assigning reputation scores to other nodes. Additionally, we display the reputation system graph using ENS. You can check it [here](https://github.com/BigaChad314/EthTokyo/blob/main/client/frontend/vite-project/src/components/Graph.tsx). More examples can be found within the repository.
 
 ### NERO Track
-deployed [here]
-(https://testnetscan.nerochain.io/address/0x41eaD2645E54fA9D3bF925AAbb60dD3DE7dE0653)
+deployed at https://testnetscan.nerochain.io/address/0x41eaD2645E54fA9D3bF925AAbb60dD3DE7dE0653
 
 
 ### Metamask/Linea Track
-deployed [here]
-(https://sepolia.lineascan.build/address/0x4a0129aa3b0b6372ca9cd99fddae8bf27dab5754#code)
+We swithced network between sepolia and scroll dev net using metamask
+you can find it [here](https://github.com/BigaChad314/EthTokyo/blob/main/client/frontend/vite-project/src/pages/graphPage.tsx)
+deployed at https://sepolia.lineascan.build/address/0x4a0129aa3b0b6372ca9cd99fddae8bf27dab5754#code
 
 
 -------------
