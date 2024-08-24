@@ -1,4 +1,4 @@
-export const contractAddress = "0x508880b8693E40aA480d610B1c719aD8a3BBACeb"; // 스마트 계약 주소
+export const contractAddress = "0xa2E5C89e54feeAd640D6d49984fEF2b73d37B60d"; // 스마트 계약 주소
 
 export const contractABI = [
   {

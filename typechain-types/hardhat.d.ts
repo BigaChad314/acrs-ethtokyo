@@ -14,10 +14,19 @@ import * as Contracts from ".";
 declare module "hardhat/types/runtime" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
     getContractFactory(
+      name: "L2StorageForReputation",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.L2StorageForReputation__factory>;
+    getContractFactory(
       name: "ReputationSystem",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ReputationSystem__factory>;
 
+    getContractAt(
+      name: "L2StorageForReputation",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.L2StorageForReputation>;
     getContractAt(
       name: "ReputationSystem",
       address: string | ethers.Addressable,
@@ -25,10 +34,19 @@ declare module "hardhat/types/runtime" {
     ): Promise<Contracts.ReputationSystem>;
 
     deployContract(
+      name: "L2StorageForReputation",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.L2StorageForReputation>;
+    deployContract(
       name: "ReputationSystem",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ReputationSystem>;
 
+    deployContract(
+      name: "L2StorageForReputation",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.L2StorageForReputation>;
     deployContract(
       name: "ReputationSystem",
       args: any[],

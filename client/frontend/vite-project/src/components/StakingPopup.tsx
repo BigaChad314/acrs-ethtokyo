@@ -147,9 +147,9 @@ const StakingPopup: React.FC<StakingPopupProps> = ({ onStake, onClose }) => {
         [[], []] as [string[], ethers.BigNumberish[]]
       );
 
-      const importanceMatrix: ethers.BigNumberish[][] = sortedNodeAddresses.map(() => [
-        ...sortedImportances,
-      ]);
+      const importanceMatrix: ethers.BigNumberish[][] = sortedNodeAddresses.map(
+        () => [...sortedImportances]
+      );
 
       const tx = await contract.verifyImportance(
         sortedNodeAddresses,
@@ -185,11 +185,13 @@ const StakingPopup: React.FC<StakingPopupProps> = ({ onStake, onClose }) => {
           <div>
             <h4>Importance and Reputation Data:</h4>
             <pre>
-              {Object.entries(importanceData.importance).map(([address, importance]) => {
-                const ensName = ensMappedData[address] || address;
-                const reputation = importanceData.reputation[address];
-                return `${ensName} - Importance: ${importance}, Reputation: ${reputation}\n`;
-              })}
+              {Object.entries(importanceData.importance).map(
+                ([address, importance]) => {
+                  const ensName = ensMappedData[address] || address;
+                  const reputation = importanceData.reputation[address];
+                  return `${ensName} - Importance: ${importance}, Reputation: ${reputation}\n`;
+                }
+              )}
             </pre>
           </div>
           <p>Importance:</p>
