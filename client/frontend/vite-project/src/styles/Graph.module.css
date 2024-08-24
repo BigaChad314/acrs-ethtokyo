@@ -1,0 +1,78 @@
+.graphWrapper {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    justify-content: center; /* 수평 중앙 정렬 */
+    align-items: center; /* 수직 중앙 정렬 */
+    margin-left: 150px; /* 사이드바 너비만큼 절반만큼 오른쪽으로 이동 */
+  }
+  
+  .graphWrapper.withSidebar {
+    width: calc(100vw - 300px); /* 그래프 영역을 축소 */
+  }
+  
+  .graphContainer {
+    flex: 1;
+    background-color: white;
+    transition: flex 0.3s ease;
+  }
+  
+  .node {
+    cursor: pointer;
+  }
+  
+  .selectedNode circle {
+    fill: orange;
+  }
+  
+  .dimmedNode circle {
+    opacity: 0.3;
+  }
+  
+  .edge {
+    stroke: gray;
+  }
+  
+  .dimmedEdge {
+    stroke: lightgray;
+    opacity: 0.3;
+  }
+  
+  .highlightedEdge {
+    stroke: darkblue;
+  }
+  
+  .tooltip {
+    background-color: white;
+    border: 1px solid gray;
+    padding: 2px;
+    border-radius: 3px;
+    font-size: 8px;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+  }
+  
+  .sidebar {
+    width: 300px;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-left: 1px solid #ccc;
+    overflow-y: auto;
+    position: fixed; /* 사이드바를 고정 */
+    top: 0;
+    right: 0;
+    height: 100%;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar h3,
+  .sidebar h4 {
+    margin-top: 0;
+  }
+  
+  .sidebar p,
+  .sidebar li {
+    font-size: 14px;
+    margin: 5px 0;
+  }

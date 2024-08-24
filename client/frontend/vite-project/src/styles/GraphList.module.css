@@ -1,0 +1,66 @@
+.graphListContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center; /* Center align the list items */
+    justify-content: center; /* Center the list items vertically */
+    
+  }
+  
+  .graphListItem {
+    display: flex;
+    align-items: center;
+    background-color: #f9f9f9;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 50%; /* Set the width to 50% of the page */
+    max-width: 600px; /* Optional: set a max width to avoid too wide items on large screens */
+ 
+}
+  
+  .nodeImage {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 1rem;
+  }
+  
+  .nodeInfo {
+    flex-grow: 1;
+  }
+  
+  .nodeInfo h4 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+  
+  .nodeStats {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+  
+  .importance {
+    font-weight: bold;
+  }
+  
+  .reputationBar {
+    width: 150px;
+    height: 8px;
+    background-color: #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .reputationFill {
+    height: 100%;
+    background-color: #4caf50;
+    border-radius: 4px;
+  }
+  
+  .reputationText {
+    font-size: 0.9rem;
+    color: #555;
+  }
