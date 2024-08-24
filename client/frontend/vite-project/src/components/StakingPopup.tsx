@@ -147,14 +147,18 @@ const StakingPopup: React.FC<StakingPopupProps> = ({ onStake, onClose }) => {
         [[], []] as [string[], ethers.BigNumberish[]]
       );
 
-      const importanceMatrix: ethers.BigNumberish[][] = sortedNodeAddresses.map(
-        () => [...sortedImportances]
-      );
+     const importanceMatrix: ethers.BigNumberish[][] = [
+        [...sortedImportances],
+        [...sortedImportances],
+        [...sortedImportances]
+      ];
 
       const tx = await contract.verifyImportance(
         sortedNodeAddresses,
         importanceMatrix
       );
+      console.log("sortedNodeAddresses", sortedNodeAddresses);
+      console.log("importanceMatrix", importanceMatrix);
       await tx.wait();
 
       console.log("Importance verified successfully.");
