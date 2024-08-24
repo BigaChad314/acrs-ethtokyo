@@ -1,20 +1,3 @@
-# How to set up the project
-
-### Frontend
-cd client/frontend/vite-project
-npm i
-npm run dev
-
-### Backend
-cd client/server
-pip install
-python3 server.py
-
-### Deploy hardhat 
-npx hardhat test --network <network>
-
--------------
-
 # Main Track
 Robust democracy
 
@@ -37,3 +20,25 @@ https://sepolia.lineascan.build/address/0x4a0129aa3b0b6372ca9cd99fddae8bf27dab57
 
 ## ENS Prize
 at branch frontwithENS
+
+-------------
+
+
+# How to set up the project
+
+### Frontend
+cd client/frontend/vite-project
+npm i
+npm run dev
+
+### Backend
+cd client/server
+pip install
+python3 server.py
+
+### Deploy hardhat 
+npx hardhat test --network <network>
+
+
+
+
