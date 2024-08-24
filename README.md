@@ -1,18 +1,19 @@
 # How to set up the project
 
-## Frontend
+### Frontend
 cd client/frontend/vite-project
 npm i
 npm run dev
 
-## Backend
+### Backend
 cd client/server
 pip install
 python3 server.py
 
-## Deploy hardhat 
+### Deploy hardhat 
 npx hardhat test --network <network>
 
+-------------
 
 # Main Track
 Robust democracy
@@ -32,7 +33,7 @@ https://testnetscan.nerochain.io/address/0x41eaD2645E54fA9D3bF925AAbb60dD3DE7dE0
 
 
 ## Metamask/Linea Prize
-https://sepolia.lineascan.build/address/0xb6a009bd1d53616d459e154a6d579c5c090b08f7
+https://sepolia.lineascan.build/address/0x4a0129aa3b0b6372ca9cd99fddae8bf27dab5754#code
 
 ## ENS Prize
 at branch frontwithENS
