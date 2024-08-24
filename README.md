@@ -1,13 +1,37 @@
-# Sample Hardhat Project
+# How to set up the project
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
+## Frontend
+cd client/frontend/vite-project
+npm i
+npm run dev
 
-Try running some of the following tasks:
+## Backend
+cd client/server
+pip install
+python3 server.py
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat ignition deploy ./ignition/modules/Lock.ts
-```
+## Deploy hardhat 
+npx hardhat test --network <network>
+
+
+# Main Track
+Robust democracy
+
+
+# Sponsor Track
+
+## Deploy on Scroll 
+
+
+## Best Build using L1SLOAD Precompile
+
+
+## NERO Prize
+https://testnetscan.nerochain.io/address/0x41eaD2645E54fA9D3bF925AAbb60dD3DE7dE0653
+
+
+## Metamask/Linea Prize
+https://sepolia.lineascan.build/address/0xb6a009bd1d53616d459e154a6d579c5c090b08f7
+
+## ENS Prize
+at branch frontwithENS
