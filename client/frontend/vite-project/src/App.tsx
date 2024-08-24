@@ -3,29 +3,24 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import GraphList from "./pages/list";
 import GraphPage from "./pages/graphPage";
 import getSampleGraph from "./hooks/getSampleGraph";
-import { ThirdwebProvider, ConnectButton } from "thirdweb/react";
-import { createWallet, walletConnect, inAppWallet } from "thirdweb/wallets";
-import { createThirdwebClient } from "thirdweb";
+//import { ThirdwebProvider, ConnectButton } from "thirdweb/react";
 import { ethers } from "ethers";
 import { contractABI, contractAddress } from "./contractConfig";
 import StakingPopup from "./components/StakingPopup";
 import "./App.css";
+import { Web3Provider } from "./Web3Provider"
+import { ConnectKitButton } from "connectkit";
+import { createConfig, http } from 'wagmi'
+import { mainnet, sepolia } from 'wagmi/chains'
 
+const config = createConfig({
+  chains: [mainnet, sepolia],
+  transports: {
+    [mainnet.id]: http('https://mainnet.example.com'),
+    [sepolia.id]: http('https://sepolia.example.com'),
+  },
+})
 
-const client = createThirdwebClient({
-  clientId: "df016d8e33fef698ceca1452ed85d476",
-});
-
-const wallets = [
-  createWallet("io.metamask"),
-  createWallet("com.coinbase.wallet"),
-  walletConnect(),
-  inAppWallet({
-    auth: {
-      options: ["email", "google", "apple", "facebook", "phone"],
-    },
-  }),
-];
 
 const sampleGraph = await getSampleGraph();
 
@@ -109,7 +104,7 @@ const App: React.FC = () => {
   }, []); // Adding selectedNodes as a dependency to re-run when it changes
 
   return (
-    <ThirdwebProvider>
+    <Web3Provider>
 <div
         className="header"
         style={{
@@ -129,12 +124,7 @@ const App: React.FC = () => {
       }}>
         Anti Collusion Reputation System
       </div>
-      <ConnectButton
-        client={client}
-        wallets={wallets}
-        theme={"dark"}
-        connectModal={{ size: "wide" }}
-      />
+      <ConnectKitButton />
       </div>
 
       <div
@@ -177,7 +167,7 @@ const App: React.FC = () => {
     )}
     </div>
 
-      <Router>
+    <Router>
         <div>
           <Routes>
             <Route path="/list" element={<GraphList graph={sampleGraph} />} />
@@ -192,7 +182,7 @@ const App: React.FC = () => {
           onClose={() => setIsStakingPopupOpen(false)}
         />
       )}
-    </ThirdwebProvider>
+     </Web3Provider>
   );
 };
 
