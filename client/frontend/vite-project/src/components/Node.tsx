@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Node } from "../types/graph";
 import { ethers } from "ethers";
-import styles from "../styles/Graph.module.css";
+import styles from "../styles/Graph.module.css";  
 
 interface NodeProps {
   node: Node;
@@ -59,9 +59,10 @@ const NodeComponent: React.FC<NodeProps> = ({
       </text>
         {node.id}
       {showTooltip && (
-        <foreignObject x={radius + 5} y={-radius - 10} width={100} height={60}>
+        <foreignObject x={radius + 5} y={-radius - 10}  width="150" height="100">
           <div className={styles.tooltip}>
             <p><strong>{name}</strong></p>
+            <p>Address: {node.address}</p>
             <p>Reputation: {Math.floor(node.reputation)}</p>
             <p>Importance: {Math.floor(node.importance)}</p>
           </div>

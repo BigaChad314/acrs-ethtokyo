@@ -47,7 +47,7 @@
  .tooltip {
   background-color: white;
   border: 1px solid gray;
-  padding: 5px; /* 여유 공간을 위해 패딩을 추가 */
+  padding: 0px; /* 여유 공간을 위해 패딩을 추가 */
   border-radius: 3px;
   font-size: 8px;
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
