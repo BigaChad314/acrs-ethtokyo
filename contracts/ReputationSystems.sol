@@ -21,6 +21,7 @@ contract ReputationSystem {
         address node2;
     }
 
+    mapping(address => uint) public reputationScore;
     mapping(address => Node) public nodes;
     mapping(address => uint256) public bonds;
     address[] public nodeAddresses;
@@ -91,6 +92,7 @@ contract ReputationSystem {
 
         if (count > 0) {
             node.reputation = totalReputation / count;
+            reputationScore[nodeAddress] = totalReputation / count;
         }
 
         emit ReputationUpdated(nodeAddress, node.reputation);
