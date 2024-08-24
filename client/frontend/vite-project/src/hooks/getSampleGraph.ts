@@ -22,7 +22,7 @@ async function getSampleGraph(): Promise<Graph> {
     "0x311e10Ca7346938f50d7D41E7b4Ba19a8CFe51Fe": { x: 700, y: 200 }, // Cluster 2, moved farther from center
     "0x487C794d1f626BE38F47995feEC236aE733c34b5": { x: 100, y: 300 }, // Cluster 3, separated
     "0x29332b313F9CCF835Ea4390aE96D75B7261559C9": { x: 150, y: 350 }, // Cluster 3, separated
-    "0xCd53f43Dfdfd939Ec6D6E03B95D29061aD2AfB4F": { x: 700, y: 400 }, // Cluster 2, separated
+    "0xCd53f43Dfdfd939Ec6D6E03B95D29061aD2AfB4F": { x: 550, y: 260 }, // Cluster 2, separated
     "0x7e99F7e28726742573125466f40CE01651f4ab61": { x: 100, y: 450 }, // Cluster 3, separated
     "0xB53C1a186B6cA40cD6a54DAc026eE8Ddc5e50082": { x: 150, y: 450 }, // Cluster 3, separated
     "0xed12622CFB180a7C12210F90318435980926908A": { x: 750, y: 450 }, // Cluster 2, separated
