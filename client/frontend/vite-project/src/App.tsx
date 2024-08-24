@@ -7,22 +7,20 @@ import getSampleGraph from "./hooks/getSampleGraph";
 import { ethers } from "ethers";
 import { contractABI, contractAddress } from "./contractConfig";
 import StakingPopup from "./components/StakingPopup";
+import L2 from "./pages/L2";
 import "./App.css";
-import { Web3Provider } from "./Web3Provider"
+import { Web3Provider } from "./Web3Provider";
 import { ConnectKitButton } from "connectkit";
-import { createConfig, http } from 'wagmi'
-import { mainnet, sepolia } from 'wagmi/chains'
+import { createConfig, http } from "wagmi";
+import { mainnet, sepolia } from "wagmi/chains";
 
 const config = createConfig({
   chains: [mainnet, sepolia],
   transports: {
-    [mainnet.id]: http('https://mainnet.example.com'),
-    [sepolia.id]: http('https://sepolia.example.com'),
+    [mainnet.id]: http("https://mainnet.example.com"),
+    [sepolia.id]: http("https://sepolia.example.com"),
   },
-})
-
-
-
+});
 
 const sampleGraph = await getSampleGraph();
 
@@ -32,6 +30,7 @@ const App: React.FC = () => {
   const [resultMessage, setResultMessage] = useState<string>("");
   const [isResultPopupOpen, setIsResultPopupOpen] = useState(false);
   const [selectedNodes, setSelectedNodes] = useState<string[]>([]);
+  const [addressList, setAddressList] = useState<string[]>([]);
   const [nodeNames, setNodeNames] = useState<string[]>([]);
 
   const handleStake = (amount: number, merkleRoot: string) => {
@@ -84,6 +83,10 @@ const App: React.FC = () => {
           signer
         );
 
+        const nodeAddresses = await contract.getNodeAddresses();
+
+        setAddressList(nodeAddresses);
+
         const randomNodes = [];
         for (let i = 0; i < 3; i++) {
           const node = await contract.randomNodes(i);
@@ -106,12 +109,12 @@ const App: React.FC = () => {
     checkUserAddress();
   }, []); // Adding selectedNodes as a dependency to re-run when it changes
 
-
-
   useEffect(() => {
     if (selectedNodes.length > 0) {
       const fetchNames = async () => {
-        const provider = new ethers.JsonRpcProvider("https://eth-sepolia.g.alchemy.com/v2/MbW4GMB1NzOld7nmj9uFA3TrcYGvIhm3");
+        const provider = new ethers.JsonRpcProvider(
+          "https://eth-sepolia.g.alchemy.com/v2/MbW4GMB1NzOld7nmj9uFA3TrcYGvIhm3"
+        );
         const fetchedNames = await Promise.all(
           selectedNodes.map(async (node) => {
             const name = await provider.lookupAddress(node);
@@ -125,10 +128,8 @@ const App: React.FC = () => {
     }
   }, [selectedNodes]);
 
-
   return (
     <Web3Provider>
-
       <div
         className="header"
         style={{
@@ -143,19 +144,18 @@ const App: React.FC = () => {
           justifyContent: "space-between",
           padding: "0px 20px", // Reduced padding to half
         }}
-      >      <div className="title" style={{ margin: "15px",
-        color: "white",
-      }}>
-        Anti Collusion Reputation System
-      </div>
-     {/*} <ConnectButton
+      >
+        {" "}
+        <div className="title" style={{ margin: "15px", color: "white" }}>
+          Anti Collusion Reputation System
+        </div>
+        {/*} <ConnectButton
         client={client}
         wallets={wallets}
         theme={"dark"}
         connectModal={{ size: "wide" }}
       />*/}
-      <ConnectKitButton />
-
+        <ConnectKitButton />
       </div>
 
       <div
@@ -163,46 +163,45 @@ const App: React.FC = () => {
           position: "relative",
           display: "inline-block",
           margin: "20px",
-
         }}
       >
         <button onClick={getSelectedNodes}>Selected Nodes</button>
-    {/* 버튼 아래에 선택된 노드를 툴팁처럼 표시 */}
-    {selectedNodes.length > 0 && (
-      <div
-      style={{
-        position: "absolute",
-        left: "110%",
-        top: "50%",
-        transform: "translateY(-50%)",
-        backgroundColor: "rgba(0, 0, 0, 0)",
-        color: "white",
-        padding: "10px",
-        borderRadius: "5px",
-        whiteSpace: "nowrap",
-        zIndex: 2,
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center", // Ensures nodes are aligned in the middle
-        gap: "10px", // Adds space between each node
-      }}
-        >
-
-        <div></div>
-        {selectedNodes.map((node, index) => (
-          <div key={index} style={{ marginTop: "5px" }}>
-            {node} {nodeNames[index] ? `(${nodeNames[index]})` : ""}
+        {/* 버튼 아래에 선택된 노드를 툴팁처럼 표시 */}
+        {selectedNodes.length > 0 && (
+          <div
+            style={{
+              position: "absolute",
+              left: "110%",
+              top: "50%",
+              transform: "translateY(-50%)",
+              backgroundColor: "rgba(0, 0, 0, 0)",
+              color: "white",
+              padding: "10px",
+              borderRadius: "5px",
+              whiteSpace: "nowrap",
+              zIndex: 2,
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center", // Ensures nodes are aligned in the middle
+              gap: "10px", // Adds space between each node
+            }}
+          >
+            <div></div>
+            {selectedNodes.map((node, index) => (
+              <div key={index} style={{ marginTop: "5px" }}>
+                {node} {nodeNames[index] ? `(${nodeNames[index]})` : ""}
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
-    )}
-    </div>
 
       <Router>
         <div>
           <Routes>
             <Route path="/list" element={<GraphList graph={sampleGraph} />} />
             <Route path="/" element={<GraphPage graph={sampleGraph} />} />
+            <Route path="/scroll" element={<L2 nodeAddrsses={addressList} />} />
           </Routes>
         </div>
       </Router>
@@ -213,7 +212,7 @@ const App: React.FC = () => {
           onClose={() => setIsStakingPopupOpen(false)}
         />
       )}
-     </Web3Provider>
+    </Web3Provider>
   );
 };
 

@@ -1,4 +1,4 @@
-export const contractAddress = "0x279457B3af3CF35720467C2c0B7c25a011187F54"; // 스마트 계약 주소
+export const contractAddress = "0x508880b8693E40aA480d610B1c719aD8a3BBACeb"; // 스마트 계약 주소
 
 export const contractABI = [
   {
@@ -390,5 +390,38 @@ export const contractABI = [
   {
     stateMutability: "payable",
     type: "receive",
+  },
+];
+
+export const l1sloadABI = [
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_l1ContractAddress",
+        type: "address",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+    ],
+    name: "retrieveL1Balance",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
   },
 ];
