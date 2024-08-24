@@ -1,409 +1,224 @@
-import { ethers } from "hardhat";
-import { expect } from "chai";
-import axios from "axios";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { ReputationSystem } from "../typechain-types";
-import { BigNumberish } from "ethers";
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
-describe("ReputationSystem", function () {
-  let reputationSystem: ReputationSystem;
-  let owner: SignerWithAddress;
-  let nodes: SignerWithAddress[];
+import "hardhat/console.sol";
 
-  beforeEach(async function () {
-    const ReputationSystemFactory = await ethers.getContractFactory(
-      "ReputationSystem"
-    );
-    [owner, ...nodes] = await ethers.getSigners();
-
-    reputationSystem =
-      (await ReputationSystemFactory.deploy()) as ReputationSystem;
-    await reputationSystem.waitForDeployment();
-
-    console.log("address: ", await reputationSystem.getAddress());
-
-    // 노드 간의 점수 설정
-    // 커뮤니티 1
-    await reputationSystem.connect(nodes[0]).giveScore(nodes[1].address, 3);
-    await reputationSystem.connect(nodes[1]).giveScore(nodes[2].address, 5);
-    await reputationSystem.connect(nodes[2]).giveScore(nodes[3].address, 4);
-    await reputationSystem.connect(nodes[3]).giveScore(nodes[0].address, 6);
-    await reputationSystem.connect(nodes[0]).giveScore(nodes[4].address, 7);
-    await reputationSystem.connect(nodes[4]).giveScore(nodes[2].address, 2);
-
-    // 커뮤니티 2
-    await reputationSystem.connect(nodes[5]).giveScore(nodes[6].address, 8);
-    await reputationSystem.connect(nodes[6]).giveScore(nodes[7].address, 5);
-    await reputationSystem.connect(nodes[7]).giveScore(nodes[8].address, 3);
-    await reputationSystem.connect(nodes[8]).giveScore(nodes[5].address, 4);
-    await reputationSystem.connect(nodes[6]).giveScore(nodes[9].address, 6);
-
-    // 커뮤니티 3
-    await reputationSystem.connect(nodes[10]).giveScore(nodes[11].address, 2);
-    await reputationSystem.connect(nodes[11]).giveScore(nodes[12].address, 7);
-    await reputationSystem.connect(nodes[12]).giveScore(nodes[13].address, 5);
-    await reputationSystem.connect(nodes[13]).giveScore(nodes[14].address, 3);
-    await reputationSystem.connect(nodes[14]).giveScore(nodes[10].address, 4);
-
-    // 커뮤니티 간 연결
-    await reputationSystem.connect(nodes[3]).giveScore(nodes[6].address, 5);
-    await reputationSystem.connect(nodes[7]).giveScore(nodes[10].address, 6);
-    await reputationSystem.connect(nodes[12]).giveScore(nodes[1].address, 3);
-    await reputationSystem.connect(nodes[9]).giveScore(nodes[13].address, 4);
-
-    // 기타 연결
-    await reputationSystem.connect(nodes[4]).giveScore(nodes[9].address, 6);
-    await reputationSystem.connect(nodes[8]).giveScore(nodes[0].address, 5);
-  });
-
-  // Helper function to fetch randomNodes from the contract after getRandomNodes has been called
-  async function getRandomNodesFromContract(
-    reputationSystem: ReputationSystem
-  ) {
-    const randomNodes = [];
-    for (let i = 0; i < 3; i++) {
-      const node = await reputationSystem.randomNodes(i);
-      randomNodes.push(node);
-    }
-    return randomNodes;
-  }
-
-  it("Should receive funds, select random nodes, deposit, fetch importance, verify importance, and compare reputations", async function () {
-    // Step 1: Contract receives funds
-    await owner.sendTransaction({
-      to: reputationSystem.getAddress(),
-      value: ethers.parseEther("10"),
-    });
-
-    const initialContractBalance = await ethers.provider.getBalance(
-      reputationSystem.getAddress()
-    );
-    expect(initialContractBalance).to.equal(ethers.parseEther("10"));
-
-    // Step 2: Select random nodes
-    await reputationSystem.connect(owner).getRandomNodes();
-    const randomNodes = await getRandomNodesFromContract(reputationSystem);
-    expect(randomNodes.length).to.equal(3);
-
-    // Step 3: Deposit by selected random nodes
-    for (const node of randomNodes) {
-      await reputationSystem
-        .connect(nodes.find((n) => n.address === node)!)
-        .deposit({ value: ethers.parseEther("1") });
+contract ReputationSystem {
+    struct Score {
+        address from;
+        uint score;
     }
 
-    // Check that deposits were successful
-    for (const node of randomNodes) {
-      const bond = await reputationSystem.bonds(node);
-      expect(bond).to.equal(ethers.parseEther("1"));
+    struct Node {
+        address id;
+        uint reputation;
+        uint importance;
+        Score[] givenScores;
     }
 
-    // Step 4: Fetch importance and reputation from server
-    const graphData = {
-      edges: [
-        // Community 1
-        [nodes[0].address, nodes[1].address, 3],
-        [nodes[1].address, nodes[2].address, 5],
-        [nodes[2].address, nodes[3].address, 4],
-        [nodes[3].address, nodes[0].address, 6],
-        [nodes[0].address, nodes[4].address, 7],
-        [nodes[4].address, nodes[2].address, 2],
+    struct Edge {
+        address node1;
+        address node2;
+    }
 
-        // Community 2
-        [nodes[5].address, nodes[6].address, 8],
-        [nodes[6].address, nodes[7].address, 5],
-        [nodes[7].address, nodes[8].address, 3],
-        [nodes[8].address, nodes[5].address, 4],
-        [nodes[6].address, nodes[9].address, 6],
+    mapping(address => Node) public nodes;
+    mapping(address => uint256) public bonds;
+    address[] public nodeAddresses;
+    address[3] public randomNodes;
+    Edge[] public edges;
 
-        // Community 3
-        [nodes[10].address, nodes[11].address, 2],
-        [nodes[11].address, nodes[12].address, 7],
-        [nodes[12].address, nodes[13].address, 5],
-        [nodes[13].address, nodes[14].address, 3],
-        [nodes[14].address, nodes[10].address, 4],
+    event ScoreGiven(address indexed from, address indexed to, uint score);
+    event ReputationUpdated(address indexed nodeAddress, uint reputation);
+    event ImportanceUpdated(address indexed nodeAddress, uint importance);
+    event EdgeAdded(address indexed node1, address indexed node2);
+    event BondDeposited(address indexed depositor, uint256 amount);
+    event ImportanceVerified(bool success);
 
-        // Inter-community connections
-        [nodes[3].address, nodes[6].address, 5],
-        [nodes[7].address, nodes[10].address, 6],
-        [nodes[12].address, nodes[1].address, 3],
-        [nodes[9].address, nodes[13].address, 4],
+    receive() external payable {
+        // 입금된 ETH는 특별한 동작 없이 계약에 보관됨
+    }
 
-        // Additional connections
-        [nodes[4].address, nodes[9].address, 6],
-        [nodes[8].address, nodes[0].address, 5],
-      ],
-    };
+    function giveScore(address to, uint score) public {
+        require(score > 0, "Score must be positive");
 
-    const response = await axios.post(
-      "http://localhost:5001/calculate",
-      graphData
-    );
-    const { importance, reputation } = response.data;
+        nodes[to].givenScores.push(Score(msg.sender, score));
 
-    const [sortedNodeAddresses, sortedImportances] = Object.entries(
-      importance
-    ).reduce(
-      ([addresses, importances], [address, importanceValue]) => {
-        addresses.push(ethers.getAddress(address)); // Convert to checksum address
-        importances.push(BigInt(Math.round(Number(importanceValue) * 1e18)));
-        return [addresses, importances];
-      },
-      [[], []] as [string[], BigNumberish[]]
-    );
+        if (nodes[to].id == address(0)) {
+            nodes[to].id = to;
 
-    const importanceMatrix: BigNumberish[][] = randomNodes.map(
-      () =>
-        sortedNodeAddresses
-          .map((nodeAddress) => {
-            const nodeImportance = importance[nodeAddress.toLowerCase()];
-            if (nodeImportance === undefined) {
-              return null; // Undefined일 경우 null 반환
+            bool exists = false;
+            for (uint i = 0; i < nodeAddresses.length; i++) {
+                if (nodeAddresses[i] == to) {
+                    exists = true;
+                    break;
+                }
             }
-            return BigInt(Math.round(Number(nodeImportance) * 1e18));
-          })
-          .filter((value) => value !== null) // Null 값을 필터링
-    );
 
-    // Step 5: Verify importance and update reputations
+            if (!exists) {
+                nodeAddresses.push(to);
+            }
+        }
 
-    // Check balances before verification
-    const initialBalances = await Promise.all(
-      randomNodes.map((node) => ethers.provider.getBalance(node))
-    );
+        addEdge(msg.sender, to);
 
-    const tx = await reputationSystem
-      .connect(owner)
-      .verifyImportance(sortedNodeAddresses, importanceMatrix);
-
-    await expect(tx)
-      .to.emit(reputationSystem, "ImportanceVerified")
-      .withArgs(true);
-
-    // Step 6: Check that each selected node received 1.5x bond amount
-    for (let i = 0; i < randomNodes.length; i++) {
-      const finalBalance = await ethers.provider.getBalance(randomNodes[i]);
-      const expectedBalance = initialBalances[i] + ethers.parseEther("1.5");
-      expect(finalBalance).to.be.closeTo(
-        expectedBalance,
-        ethers.parseEther("0.01")
-      ); // 0.01 ETH 범위 내에서 확인
+        emit ScoreGiven(msg.sender, to, score);
     }
 
-    // Step 7: Compare smart contract reputation with server reputation
-    for (const [nodeAddress, nodeReputation] of Object.entries(reputation)) {
-      const nodeData = await reputationSystem.getNodeData(
-        ethers.getAddress(nodeAddress)
-      );
-      expect(nodeData[0]).to.be.closeTo(
-        BigInt(Math.round(Number(nodeReputation) * 1e18)),
-        BigInt(1e10)
-      );
-    }
-  });
-  it("Should not reward nodes if one importance set does not match", async function () {
-    // Step 1: Contract receives funds
-    await owner.sendTransaction({
-      to: reputationSystem.getAddress(),
-      value: ethers.parseEther("10"),
-    });
-
-    const initialContractBalance = await ethers.provider.getBalance(
-      reputationSystem.getAddress()
-    );
-    expect(initialContractBalance).to.equal(ethers.parseEther("10"));
-
-    // Step 2: Select random nodes
-    await reputationSystem.connect(owner).getRandomNodes();
-    const randomNodes = await getRandomNodesFromContract(reputationSystem);
-    expect(randomNodes.length).to.equal(3);
-
-    // Step 3: Deposit by selected random nodes
-    for (const node of randomNodes) {
-      await reputationSystem
-        .connect(nodes.find((n) => n.address === node)!)
-        .deposit({ value: ethers.parseEther("1") });
+    function addEdge(address node1, address node2) internal {
+        edges.push(Edge(node1, node2));
+        emit EdgeAdded(node1, node2);
     }
 
-    // Check that deposits were successful
-    for (const node of randomNodes) {
-      const bond = await reputationSystem.bonds(node);
-      expect(bond).to.equal(ethers.parseEther("1"));
+    function updateImportanceForAll(address[] memory sortedNodeAddresses, uint[] memory importances) internal {
+        require(sortedNodeAddresses.length == importances.length, "Node addresses and importances array lengths must match.");
+        
+        for (uint i = 0; i < sortedNodeAddresses.length; i++) {
+            nodes[sortedNodeAddresses[i]].importance = importances[i];
+            emit ImportanceUpdated(sortedNodeAddresses[i], importances[i]);
+        }
     }
 
-    // Step 4: Fetch importance and reputation from server
-    const graphData = {
-      edges: [
-        // Community 1
-        [nodes[0].address, nodes[1].address, 3],
-        [nodes[1].address, nodes[2].address, 5],
-        [nodes[2].address, nodes[3].address, 4],
-        [nodes[3].address, nodes[0].address, 6],
-        [nodes[0].address, nodes[4].address, 7],
-        [nodes[4].address, nodes[2].address, 2],
+    function updateReputation(address nodeAddress) internal {
+        Node storage node = nodes[nodeAddress];
+        uint totalReputation = 0;
+        uint count = node.givenScores.length;
 
-        // Community 2
-        [nodes[5].address, nodes[6].address, 8],
-        [nodes[6].address, nodes[7].address, 5],
-        [nodes[7].address, nodes[8].address, 3],
-        [nodes[8].address, nodes[5].address, 4],
-        [nodes[6].address, nodes[9].address, 6],
+        for (uint i = 0; i < count; i++) {
+            Score memory score = node.givenScores[i];
+            Node storage fromNode = nodes[score.from];
+            totalReputation += fromNode.importance * score.score;
+        }
 
-        // Community 3
-        [nodes[10].address, nodes[11].address, 2],
-        [nodes[11].address, nodes[12].address, 7],
-        [nodes[12].address, nodes[13].address, 5],
-        [nodes[13].address, nodes[14].address, 3],
-        [nodes[14].address, nodes[10].address, 4],
+        if (count > 0) {
+            node.reputation = totalReputation / count;
+        }
 
-        // Inter-community connections
-        [nodes[3].address, nodes[6].address, 5],
-        [nodes[7].address, nodes[10].address, 6],
-        [nodes[12].address, nodes[1].address, 3],
-        [nodes[9].address, nodes[13].address, 4],
-
-        // Additional connections
-        [nodes[4].address, nodes[9].address, 6],
-        [nodes[8].address, nodes[0].address, 5],
-      ],
-    };
-
-    const response = await axios.post(
-      "http://localhost:5001/calculate",
-      graphData
-    );
-    const { importance } = response.data;
-
-    const [sortedNodeAddresses, sortedImportances] = Object.entries(
-      importance
-    ).reduce(
-      ([addresses, importances], [address, importanceValue]) => {
-        addresses.push(ethers.getAddress(address)); // Convert to checksum address
-        importances.push(BigInt(Math.round(Number(importanceValue) * 1e18)));
-        return [addresses, importances];
-      },
-      [[], []] as [string[], BigNumberish[]]
-    );
-
-    // Step 5: Modify one importance value to simulate mismatch
-    const importanceMatrix: BigNumberish[][] = randomNodes.map(() => [
-      ...sortedImportances,
-    ]);
-
-    // Simulate a mismatch in the second node's importance array
-    importanceMatrix[1][0] =
-      ethers.toBigInt(importanceMatrix[1][0]) + 1n * 10n ** 18n; // Slightly modify the first importance value
-
-    // Check balances before verification
-    const initialBalances = await Promise.all(
-      randomNodes.map((node) => ethers.provider.getBalance(node))
-    );
-
-    // Step 6: Verify importance and check that no rewards are given
-    const tx = await reputationSystem
-      .connect(owner)
-      .verifyImportance(sortedNodeAddresses, importanceMatrix);
-
-    await expect(tx)
-      .to.emit(reputationSystem, "ImportanceVerified")
-      .withArgs(false); // Expect the verification to fail
-
-    // Step 7: Check that balances remain the same (no rewards given)
-    for (let i = 0; i < randomNodes.length; i++) {
-      const finalBalance = await ethers.provider.getBalance(randomNodes[i]);
-      expect(finalBalance).to.be.closeTo(
-        initialBalances[i],
-        ethers.parseEther("0.01")
-      ); // No reward should be added
+        emit ReputationUpdated(nodeAddress, node.reputation);
     }
-  });
-  it("Should update reputation when a new connection is added", async function () {
-    // Step 1: Add a new connection between nodes[0] and nodes[10]
-    await reputationSystem.connect(nodes[0]).giveScore(nodes[10].address, 8);
 
-    // Step 2: Manually calculate expected reputation for nodes[10]
-    // Before the connection, nodes[10] should have its initial reputation.
-    // After the connection, nodes[10]'s reputation should be influenced by nodes[0]'s importance and the score (8).
+    function updateReputationForAll(address[] memory sortedNodeAddresses) internal {
+        for (uint i = 0; i < sortedNodeAddresses.length; i++) {
+            updateReputation(sortedNodeAddresses[i]);
+        }
+    }
 
-    // Fetch the current reputation of nodes[10] before update
-    const { reputation: oldReputation } = await reputationSystem.getNodeData(
-      nodes[10].address
-    );
+    function getEdges() public view returns (Edge[] memory) {
+        return edges;
+    }
 
-    // Step 3: Fetch importance and reputation from server to simulate the update
-    const graphData = {
-      edges: [
-        // Community 1
-        [nodes[0].address, nodes[1].address, 3],
-        [nodes[1].address, nodes[2].address, 5],
-        [nodes[2].address, nodes[3].address, 4],
-        [nodes[3].address, nodes[0].address, 6],
-        [nodes[0].address, nodes[4].address, 7],
-        [nodes[4].address, nodes[2].address, 2],
+    function getNodeData(address nodeAddress) public view returns (uint reputation, uint totalGivenScores) {
+        Node storage node = nodes[nodeAddress];
+        return (node.reputation, node.givenScores.length);
+    }
 
-        // Community 2
-        [nodes[5].address, nodes[6].address, 8],
-        [nodes[6].address, nodes[7].address, 5],
-        [nodes[7].address, nodes[8].address, 3],
-        [nodes[8].address, nodes[5].address, 4],
-        [nodes[6].address, nodes[9].address, 6],
+    function getGivenScores(address nodeAddress) public view returns (Score[] memory) {
+        return nodes[nodeAddress].givenScores;
+    }
 
-        // Community 3
-        [nodes[10].address, nodes[11].address, 2],
-        [nodes[11].address, nodes[12].address, 7],
-        [nodes[12].address, nodes[13].address, 5],
-        [nodes[13].address, nodes[14].address, 3],
-        [nodes[14].address, nodes[10].address, 4],
+    function getNodeAddressesLength() public view returns (uint) {
+        return nodeAddresses.length;
+    }
 
-        // Inter-community connections
-        [nodes[3].address, nodes[6].address, 5],
-        [nodes[7].address, nodes[10].address, 6],
-        [nodes[12].address, nodes[1].address, 3],
-        [nodes[9].address, nodes[13].address, 4],
+    function getNodeAddresses() public view returns (address[] memory) {
+        return nodeAddresses;
+    }
 
-        // Additional connections
-        [nodes[4].address, nodes[9].address, 6],
-        [nodes[8].address, nodes[0].address, 5],
+    function getRandomNodes() public returns (address[3] memory) {
+        require(nodeAddresses.length >= 3, "Not enough nodes to select 3 random nodes");
 
-        // New connection added
-        [nodes[0].address, nodes[10].address, 8],
-      ],
-    };
+        address[] memory availableNodes = new address[](nodeAddresses.length);
+        for (uint i = 0; i < nodeAddresses.length; i++) {
+            availableNodes[i] = nodeAddresses[i];
+        }
 
-    const response = await axios.post(
-      "http://localhost:5001/calculate",
-      graphData
-    );
-    const { importance, reputation } = response.data;
+        for (uint i = 0; i < 3; i++) {
+            uint randomIndex = uint(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, i, msg.sender))) % availableNodes.length;
+            randomNodes[i] = availableNodes[randomIndex];
 
-    const [sortedNodeAddresses, sortedImportances] = Object.entries(
-      importance
-    ).reduce(
-      ([addresses, importances], [address, importanceValue]) => {
-        addresses.push(ethers.getAddress(address)); // Convert to checksum address
-        importances.push(BigInt(Math.round(Number(importanceValue) * 1e18)));
-        return [addresses, importances];
-      },
-      [[], []] as [string[], BigNumberish[]]
-    );
+            availableNodes[randomIndex] = availableNodes[availableNodes.length - 1]; // 랜덤 인덱스를 맨 마지막 원소로 덮어 씌움
+            assembly {
+                mstore(availableNodes, sub(mload(availableNodes), 1)) // 마지막 원소 제거
+            }
+        }
 
-    await reputationSystem.connect(owner).getRandomNodes();
-    const randomNodes = await getRandomNodesFromContract(reputationSystem);
+    return randomNodes;
+}
 
-    const importanceMatrix: BigNumberish[][] = randomNodes.map(() => [
-      ...sortedImportances,
-    ]);
+    function deposit() public payable {
+        require(isRandomNode(msg.sender), "Only selected random nodes can deposit.");
+        bonds[msg.sender] += msg.value;
+        emit BondDeposited(msg.sender, msg.value);
+    }
 
-    // Step 4: Verify importance and update reputations
-    await reputationSystem
-      .connect(owner)
-      .verifyImportance(sortedNodeAddresses, importanceMatrix);
+    function isRandomNode(address user) internal view returns (bool) {
+        for (uint i = 0; i < randomNodes.length; i++) {
+            if (randomNodes[i] == user) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-    // Fetch the new reputation of nodes[10] after update
-    const { reputation: newReputationAfterUpdate } =
-      await reputationSystem.getNodeData(nodes[10].address);
+    function verifyImportance(address[] memory sortedNodeAddresses, uint[][] memory importances) public {
+        require(importances.length == 3, "Must provide exactly 3 sets of importance values.");
+        require(importances[0].length == sortedNodeAddresses.length, "Each set of importances must match the number of nodes.");
+        
+        // Merkle Root 해시 계산
+        bytes32[3] memory merkleRoots;
+        for (uint i = 0; i < 3; i++) {
+            merkleRoots[i] = calculateMerkleRoot(importances[i]);
+        }
 
-    // Step 5: Check that the reputation has been updated correctly
-    expect(newReputationAfterUpdate).to.be.gt(oldReputation);
-  });
-});
+        // 모든 Merkle Root가 동일한지 확인
+        if (merkleRoots[0] == merkleRoots[1] && merkleRoots[1] == merkleRoots[2]) {
+            updateImportanceForAll(sortedNodeAddresses, importances[0]);
+            updateReputationForAll(sortedNodeAddresses);
+            
+            // 1.5배 보상 지급
+            for (uint i = 0; i < randomNodes.length; i++) {
+                uint reward = bonds[randomNodes[i]] * 3 / 2;
+                payable(randomNodes[i]).transfer(reward);
+                bonds[randomNodes[i]] = 0; // 초기화
+            }
+            emit ImportanceVerified(true);
+        } else {
+            // 보상 몰수
+            for (uint i = 0; i < randomNodes.length; i++) {
+                bonds[randomNodes[i]] = 0; // bond 초기화
+            }
+            emit ImportanceVerified(false);
+        }
+    }
+
+    function calculateMerkleRoot(uint[] memory importances) internal pure returns (bytes32) {
+        require(importances.length > 0, "Importance array cannot be empty.");
+
+        // 간단한 Merkle Tree 구현을 위해 짝수 개수를 맞춤
+        if (importances.length % 2 != 0) {
+            importances[importances.length - 1] = importances[importances.length - 2];
+        }
+
+        // Merkle Tree 해시 계산
+        bytes32[] memory hashes = new bytes32[](importances.length);
+        for (uint i = 0; i < importances.length; i++) {
+            hashes[i] = keccak256(abi.encodePacked(importances[i]));
+        }
+
+        while (hashes.length > 1) {
+            uint newLength = (hashes.length + 1) / 2;
+            bytes32[] memory newHashes = new bytes32[](newLength);
+
+            for (uint i = 0; i < newLength; i++) {
+                if (i * 2 + 1 < hashes.length) {
+                    newHashes[i] = keccak256(abi.encodePacked(hashes[i * 2], hashes[i * 2 + 1]));
+                } else {
+                    newHashes[i] = hashes[i * 2];
+                }
+            }
+
+            hashes = newHashes;
+        }
+
+        return hashes[0]; // Merkle Root 반환
+    }
+}
