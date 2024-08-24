@@ -9,6 +9,7 @@ import { createThirdwebClient } from "thirdweb";
 import { ethers } from "ethers";
 import { contractABI, contractAddress } from "./contractConfig";
 import StakingPopup from "./components/StakingPopup";
+import L2 from "./pages/L2";
 
 const client = createThirdwebClient({
   clientId: "df016d8e33fef698ceca1452ed85d476",
@@ -33,6 +34,7 @@ const App: React.FC = () => {
   const [resultMessage, setResultMessage] = useState<string>("");
   const [isResultPopupOpen, setIsResultPopupOpen] = useState(false);
   const [selectedNodes, setSelectedNodes] = useState<string[]>([]);
+  const [addressList, setAddressList] = useState<string[]>([]);
 
   const handleStake = (amount: number, merkleRoot: string) => {
     console.log(`Staked amount: ${amount} with Merkle Root: ${merkleRoot}`);
@@ -83,6 +85,10 @@ const App: React.FC = () => {
           contractABI,
           signer
         );
+
+        const nodeAddresses = await contract.getNodeAddresses();
+
+        setAddressList(nodeAddresses);
 
         const randomNodes = [];
         for (let i = 0; i < 3; i++) {
@@ -148,6 +154,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/list" element={<GraphList graph={sampleGraph} />} />
             <Route path="/" element={<GraphPage graph={sampleGraph} />} />
+            <Route path="/scroll" element={<L2 nodeAddrsses={addressList} />} />
           </Routes>
         </div>
       </Router>
