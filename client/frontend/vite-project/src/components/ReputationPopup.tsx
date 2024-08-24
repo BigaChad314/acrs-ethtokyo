@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Popup from "./Popup";
 import { ethers } from "ethers";
 import { contractABI, contractAddress } from "../contractConfig";
+import styles from "../styles/Popup.module.css";
+
 
 interface ReputationPopupProps {
   nodeAddress: string;
@@ -12,6 +14,20 @@ interface ReputationPopupProps {
 const ReputationPopup: React.FC<ReputationPopupProps> = ({ nodeAddress, onSubmit, onClose }) => {
   const [reputation, setReputation] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [name, setName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (nodeAddress) {
+      const fetchName = async () => {
+        const provider = new ethers.JsonRpcProvider("https://eth-sepolia.g.alchemy.com/v2/MbW4GMB1NzOld7nmj9uFA3TrcYGvIhm3");
+        const fetchedName = await provider.lookupAddress(nodeAddress);
+        setName(fetchedName || "");
+      };
+
+      fetchName();
+    }
+  }, [nodeAddress]);
+
 
   const handleSubmit = async () => {
     if (reputation <= 0 || reputation > 100) return;
@@ -41,25 +57,32 @@ const ReputationPopup: React.FC<ReputationPopupProps> = ({ nodeAddress, onSubmit
   };
 
   return (
-    <Popup title="Assign Reputation" onClose={onClose}>
-      <div>
-        <p>Assign reputation score to node: {nodeAddress}</p>
-        <input
-          type="number"
-          placeholder="Enter reputation score"
-          value={reputation}
-          onChange={(e) => {
-            const value = Number(e.target.value);
-            if (value >= 0 && value <= 100) {
-              setReputation(value);
-            }
-          }}
-          min={0}
-          max={100}
-        />
-        <input type="text" placeholder="Node address" value={nodeAddress} readOnly />
+    <Popup title="" onClose={onClose}>
+      <button className={styles.popupClose} onClick={onClose}>X</button> {/* Close 버튼을 "X"로 대체 */}
+      <div className={styles.headerRow}>
+      <div className={styles.recipientLabel}>Give Score To:</div>
+      <div className={styles.recipientName}>{name}</div>
       </div>
-      <button onClick={handleSubmit} disabled={isSubmitting}>
+      <hr className={styles.divider} />
+      <div className={styles.nodeInfo}>
+        <div className={styles.nodeLabel}>Address:</div>
+        <div className={styles.nodeValue}>{`${nodeAddress.slice(0, 6)}...${nodeAddress.slice(-3)}`}</div>
+      </div>
+      <input
+        type="number"
+        placeholder="Enter reputation score"
+        className={styles.scoreInputField}
+        value={reputation}
+        onChange={(e) => {
+          const value = Number(e.target.value);
+          if (value >= 0 && value <= 100) {
+            setReputation(value);
+          }
+        }}
+        min={0}
+        max={100}
+      />
+      <button className={styles.submitButton} onClick={handleSubmit} disabled={isSubmitting}>
         {isSubmitting ? "Submitting..." : "Submit"}
       </button>
     </Popup>

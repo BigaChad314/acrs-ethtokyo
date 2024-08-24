@@ -14,8 +14,9 @@
   
   .graphContainer {
     flex: 1;
-    background-color: white;
+    background-color: black;
     transition: flex 0.3s ease;
+    z-index: 1;
   }
   
   .node {
@@ -23,7 +24,7 @@
   }
   
   .selectedNode circle {
-    fill: orange;
+    fill: #48D2F0;
   }
   
   .dimmedNode circle {
@@ -31,7 +32,7 @@
   }
   
   .edge {
-    stroke: gray;
+    stroke: #D9D9D9;
   }
   
   .dimmedEdge {
@@ -40,39 +41,136 @@
   }
   
   .highlightedEdge {
-    stroke: darkblue;
+    stroke: #48D2F0;
   }
   
-  .tooltip {
-    background-color: white;
-    border: 1px solid gray;
-    padding: 2px;
-    border-radius: 3px;
-    font-size: 8px;
-    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
-  }
-  
+ .tooltip {
+  background-color: white;
+  border: 1px solid gray;
+  padding: 5px; /* 여유 공간을 위해 패딩을 추가 */
+  border-radius: 3px;
+  font-size: 8px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+  width: auto; /* 가로 크기를 자동으로 설정 */
+  height: auto; /* 세로 크기를 자동으로 설정 */
+  max-width: 200px; /* 툴팁의 최대 너비 설정 */
+  white-space: nowrap; /* 줄 바꿈을 방지하여 내용이 한 줄로 표시되도록 설정 */
+}
+
+ 
+
   .sidebar {
-    width: 300px;
+    width: 400px;
     padding: 20px;
-    background-color: #f5f5f5;
+    background-color: #ffffff;
     border-left: 1px solid #ccc;
     overflow-y: auto;
     position: fixed; /* 사이드바를 고정 */
     top: 0;
     right: 0;
     height: 100%;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+    border: 1px solid #d9d9d9;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease;
+    z-index: 10;
+  }
+
+  .sidebarTitle {
+    font-weight: 400;
+    font-size: 24px;
+    color: #000000;
   }
   
-  .sidebar h3,
-  .sidebar h4 {
-    margin-top: 0;
+  .divider {
+    margin-top: 30px;
+    width: 100%;
+    height: 2px;
+    border: none;
+    background-color: #d9d9d9;
   }
   
-  .sidebar p,
-  .sidebar li {
-    font-size: 14px;
-    margin: 5px 0;
+  .infoRow, .addressRow {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+  
+  .infoLabel, .scoreLabels {
+    font-weight: 100;
+    color: #000000;
+  }
+
+  .statsLabels {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Adds a 15px gap between the labels */
+    font-weight: 100;
+    color: #000000;
+  } 
+  
+  .infoValue,  .scoreValues {
+    font-weight: 400;
+    color: #333333;
+  }
+
+  .statsValues{
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Adds a 15px gap between the labels */
+    font-weight: 100;
+    color: #333333;
+    text-align: right;
+  }
+  
+  .statsContainer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+  
+  .reputationScore {
+    font-weight: 100;
+    margin-top: 30px;
+  }
+  
+  .scoreRow {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+  }
+  
+  .scoreButton {
+    margin-top: 40px;
+    padding: 10px 20px;
+    background-color: #ffffff;
+    color: #000000;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    border: 1px solid black; /* 검은색 테두리 추가 */
+    width : 130px;
+  }
+  
+  .scoreButton:hover {
+    background-color: #cecece;
+    
+    
+  }
+  
+  @media (max-width: 991px) {
+    .sidebar {
+      padding: 20px;
+    }
+    .sidebarTitle {
+      font-size: 20px;
+    }
+    .divider {
+      margin-top: 20px;
+    }
+    .infoRow, .addressRow {
+      margin-top: 15px;
+    }
+    .statsContainer, .scoreRow {
+      margin-top: 15px;
+    }
   }

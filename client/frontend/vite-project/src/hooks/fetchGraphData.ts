@@ -15,17 +15,22 @@ export async function fetchGraphData(): Promise<GraphData> {
 
   const edges: Edge[] = [];
 
-  // Iterate over each node to fetch given scores and construct edges
   for (let i = 0; i < nodeAddresses.length; i++) {
     const nodeAddress = nodeAddresses[i];
     const givenScores = await contract.getGivenScores(nodeAddress);
-
+  
     for (let j = 0; j < givenScores.length; j++) {
       const score = givenScores[j];
+      console.log("checking score", score);
+  
+      // Extract the address and score from the returned object
+      const from = score[0]; // Extract address (score[0])
+      const scoreValue = score[1]; // Extract score (score[1])
+  
       edges.push({
-        from: score.from,
+        from: from,
         to: nodeAddress,
-        score: score.score,
+        score: Number(scoreValue), // Convert BigInt to number if needed
       });
     }
   }

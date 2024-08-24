@@ -3,27 +3,26 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import GraphList from "./pages/list";
 import GraphPage from "./pages/graphPage";
 import getSampleGraph from "./hooks/getSampleGraph";
-import { ThirdwebProvider, ConnectButton } from "thirdweb/react";
-import { createWallet, walletConnect, inAppWallet } from "thirdweb/wallets";
-import { createThirdwebClient } from "thirdweb";
+//import { ThirdwebProvider, ConnectButton } from "thirdweb/react";
 import { ethers } from "ethers";
 import { contractABI, contractAddress } from "./contractConfig";
 import StakingPopup from "./components/StakingPopup";
+import "./App.css";
+import { Web3Provider } from "./Web3Provider"
+import { ConnectKitButton } from "connectkit";
+import { createConfig, http } from 'wagmi'
+import { mainnet, sepolia } from 'wagmi/chains'
 
-const client = createThirdwebClient({
-  clientId: "df016d8e33fef698ceca1452ed85d476",
-});
+const config = createConfig({
+  chains: [mainnet, sepolia],
+  transports: {
+    [mainnet.id]: http('https://mainnet.example.com'),
+    [sepolia.id]: http('https://sepolia.example.com'),
+  },
+})
 
-const wallets = [
-  createWallet("io.metamask"),
-  createWallet("com.coinbase.wallet"),
-  walletConnect(),
-  inAppWallet({
-    auth: {
-      options: ["email", "google", "apple", "facebook", "phone"],
-    },
-  }),
-];
+
+
 
 const sampleGraph = await getSampleGraph();
 
@@ -33,6 +32,7 @@ const App: React.FC = () => {
   const [resultMessage, setResultMessage] = useState<string>("");
   const [isResultPopupOpen, setIsResultPopupOpen] = useState(false);
   const [selectedNodes, setSelectedNodes] = useState<string[]>([]);
+  const [nodeNames, setNodeNames] = useState<string[]>([]);
 
   const handleStake = (amount: number, merkleRoot: string) => {
     console.log(`Staked amount: ${amount} with Merkle Root: ${merkleRoot}`);
@@ -106,42 +106,97 @@ const App: React.FC = () => {
     checkUserAddress();
   }, []); // Adding selectedNodes as a dependency to re-run when it changes
 
+
+
+  useEffect(() => {
+    if (selectedNodes.length > 0) {
+      const fetchNames = async () => {
+        const provider = new ethers.JsonRpcProvider("https://eth-sepolia.g.alchemy.com/v2/MbW4GMB1NzOld7nmj9uFA3TrcYGvIhm3");
+        const fetchedNames = await Promise.all(
+          selectedNodes.map(async (node) => {
+            const name = await provider.lookupAddress(node);
+            return name || ""; // 이름이 없을 경우 빈 문자열 반환
+          })
+        );
+        setNodeNames(fetchedNames);
+      };
+
+      fetchNames();
+    }
+  }, [selectedNodes]);
+
+
   return (
-    <ThirdwebProvider>
-      <ConnectButton
+    <Web3Provider>
+
+      <div
+        className="header"
+        style={{
+          backgroundColor: "rgba(45, 45, 45, 1)",
+          display: "flex",
+          width: "100%",
+          gap: "10px",
+          fontWeight: 700,
+          fontSize: "18px",
+          fontFamily: "Pretendard, sans-serif",
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+          padding: "0px 20px", // Reduced padding to half
+        }}
+      >      <div className="title" style={{ margin: "15px",
+        color: "white",
+      }}>
+        Anti Collusion Reputation System
+      </div>
+     {/*} <ConnectButton
         client={client}
         wallets={wallets}
         theme={"dark"}
         connectModal={{ size: "wide" }}
-      />
+      />*/}
+      <ConnectKitButton />
+
+      </div>
 
       <div
         style={{
           position: "relative",
           display: "inline-block",
           margin: "20px",
+
         }}
       >
         <button onClick={getSelectedNodes}>Selected Nodes</button>
-        {/* 버튼 아래에 선택된 노드를 툴팁처럼 표시 */}
-        {selectedNodes.length > 0 && (
-          <div
-            style={{
-              position: "absolute",
-              top: "40px",
-              left: "0",
-              backgroundColor: "#333",
-              color: "#fff",
-              padding: "5px",
-              borderRadius: "5px",
-              whiteSpace: "nowrap",
-              zIndex: 100,
-            }}
-          >
-            Selected Nodes: {selectedNodes.join(", ")}
+    {/* 버튼 아래에 선택된 노드를 툴팁처럼 표시 */}
+    {selectedNodes.length > 0 && (
+      <div
+      style={{
+        position: "absolute",
+        left: "110%",
+        top: "50%",
+        transform: "translateY(-50%)",
+        backgroundColor: "rgba(0, 0, 0, 0)",
+        color: "white",
+        padding: "10px",
+        borderRadius: "5px",
+        whiteSpace: "nowrap",
+        zIndex: 2,
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center", // Ensures nodes are aligned in the middle
+        gap: "10px", // Adds space between each node
+      }}
+        >
+
+        <div></div>
+        {selectedNodes.map((node, index) => (
+          <div key={index} style={{ marginTop: "5px" }}>
+            {node} {nodeNames[index] ? `(${nodeNames[index]})` : ""}
           </div>
-        )}
+        ))}
       </div>
+    )}
+    </div>
 
       <Router>
         <div>
@@ -158,7 +213,7 @@ const App: React.FC = () => {
           onClose={() => setIsStakingPopupOpen(false)}
         />
       )}
-    </ThirdwebProvider>
+     </Web3Provider>
   );
 };
 

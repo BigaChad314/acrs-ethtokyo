@@ -9,7 +9,7 @@ interface ResultPopupProps {
 const ResultPopup: React.FC<ResultPopupProps> = ({ message, onClose }) => {
   return (
     <Popup title="Result" onClose={onClose}>
-      <p>{message}</p>
+      <p className="result-message">{message}</p>
     </Popup>
   );
 };

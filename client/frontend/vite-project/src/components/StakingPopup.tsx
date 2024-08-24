@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import { contractABI, contractAddress } from "../contractConfig";
 import axios from "axios";
 import { fetchGraphData } from "../hooks/fetchGraphData";
+import styles from "../styles/Popup.module.css";
 
 interface StakingPopupProps {
   onStake: (amount: number, merkleRoot: string) => void;
@@ -16,7 +17,11 @@ const StakingPopup: React.FC<StakingPopupProps> = ({ onStake, onClose }) => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [rewardPopup, setRewardPopup] = useState<string | null>(null);
   const [importanceData, setImportanceData] = useState<{
-    [key: string]: number;
+    importance: { [key: string]: number };
+    reputation: { [key: string]: number };
+  }>({ importance: {}, reputation: {} });
+  const [ensMappedData, setEnsMappedData] = useState<{
+    [key: string]: string;
   }>({});
 
   useEffect(() => {
@@ -29,7 +34,6 @@ const StakingPopup: React.FC<StakingPopupProps> = ({ onStake, onClose }) => {
 
     const listenForImportanceVerified = async () => {
       contract.on("ImportanceVerified", async (success: boolean, event) => {
-        // 트랜잭션 ID가 일치하는지 확인
         if (success) {
           setRewardPopup("Success! You received a 1.5x reward.");
         } else {
@@ -40,11 +44,36 @@ const StakingPopup: React.FC<StakingPopupProps> = ({ onStake, onClose }) => {
 
     listenForImportanceVerified();
 
-    // 컴포넌트가 언마운트될 때 이벤트 리스너 제거
     return () => {
       contract.off("ImportanceVerified", () => {});
     };
   }, []);
+
+  // Fetch importance data and map to ENS names
+  useEffect(() => {
+    const fetchAndMapEnsNames = async () => {
+      const provider = new ethers.JsonRpcProvider(
+        "https://eth-sepolia.g.alchemy.com/v2/MbW4GMB1NzOld7nmj9uFA3TrcYGvIhm3"
+      );
+
+      const mappedData: { [key: string]: string } = {};
+
+      for (const address of Object.keys(importanceData.importance)) {
+        if (ethers.isAddress(address)) {
+          const ensName = await provider.lookupAddress(address);
+          mappedData[address] = ensName || address;
+        } else {
+          mappedData[address] = address;
+        }
+      }
+
+      setEnsMappedData(mappedData);
+    };
+
+    if (Object.keys(importanceData.importance).length > 0) {
+      fetchAndMapEnsNames();
+    }
+  }, [importanceData]);
 
   const getImportance = async () => {
     try {
@@ -53,7 +82,7 @@ const StakingPopup: React.FC<StakingPopupProps> = ({ onStake, onClose }) => {
         ...graphData,
         edges: graphData.edges.map((edge) => ({
           ...edge,
-          score: Number(edge.score), // Convert BigInt to Number
+          score: Number(edge.score),
         })),
       };
       const response = await axios.post(
@@ -80,14 +109,10 @@ const StakingPopup: React.FC<StakingPopupProps> = ({ onStake, onClose }) => {
         signer
       );
 
-      // 스테이킹 트랜잭션 발생
-
       const tx = await contract.deposit({
         value: ethers.parseEther(String(amount)),
       });
-      await tx.wait(); // 트랜잭션이 블록에 포함될 때까지 대기
-
-      // await contract.verfiyImportance([signer.address, signer.address, signer.address], importance);
+      await tx.wait();
 
       onStake(amount, merkleRoot);
     } catch (error) {
@@ -97,15 +122,6 @@ const StakingPopup: React.FC<StakingPopupProps> = ({ onStake, onClose }) => {
       onClose();
     }
   };
-
-  async function getRandomNodesFromContract(reputationSystem: ethers.Contract) {
-    const randomNodes = [];
-    for (let i = 0; i < 3; i++) {
-      const node = await reputationSystem.randomNodes(i);
-      randomNodes.push(node);
-    }
-    return randomNodes;
-  }
 
   const handleVerifyImportance = async () => {
     try {
@@ -118,33 +134,23 @@ const StakingPopup: React.FC<StakingPopupProps> = ({ onStake, onClose }) => {
         signer
       );
 
-      // Format the importance data into the required array of arrays for importances
-      // const parsedImportance = JSON.parse(merkleRoot);
       const parsedImportance = await getImportance();
-      console.log(parsedImportance);
-      // const importances = [
-      //   Object.values(parsedImportance),
-      //   Object.values(parsedImportance),
-      //   Object.values(parsedImportance),
-      // ];
+
       const [sortedNodeAddresses, sortedImportances] = Object.entries(
         parsedImportance.importance
       ).reduce(
         ([addresses, importances], [address, importanceValue]) => {
-          addresses.push(ethers.getAddress(address)); // Convert to checksum address
+          addresses.push(ethers.getAddress(address));
           importances.push(BigInt(Math.round(Number(importanceValue) * 1e18)));
           return [addresses, importances];
         },
         [[], []] as [string[], ethers.BigNumberish[]]
       );
 
-      const randomNodes = await getRandomNodesFromContract(contract);
-
-      const importanceMatrix: ethers.BigNumberish[][] = randomNodes.map(() => [
+      const importanceMatrix: ethers.BigNumberish[][] = sortedNodeAddresses.map(() => [
         ...sortedImportances,
       ]);
 
-      // Call the verifyImportance function on the contract
       const tx = await contract.verifyImportance(
         sortedNodeAddresses,
         importanceMatrix
@@ -157,13 +163,14 @@ const StakingPopup: React.FC<StakingPopupProps> = ({ onStake, onClose }) => {
     }
   };
 
-  const handleMalicious = async () => {};
-
   return (
     <div>
-      <Popup title="Stake Your Tokens" onClose={onClose}>
+      <Popup title="" onClose={onClose}>
+        <button className={styles.popupClose} onClick={onClose}>
+          X
+        </button>
         <div>
-          <p>Enter the amount to stake:</p>
+          <p>amount:</p>
           <input
             type="number"
             placeholder="Enter amount"
@@ -176,8 +183,14 @@ const StakingPopup: React.FC<StakingPopupProps> = ({ onStake, onClose }) => {
           <p>Get Importance</p>
           <button onClick={getImportance}>Get Importance</button>
           <div>
-            <h4>Importance Data:</h4>
-            <pre>{JSON.stringify(importanceData, null, 2)}</pre>
+            <h4>Importance and Reputation Data:</h4>
+            <pre>
+              {Object.entries(importanceData.importance).map(([address, importance]) => {
+                const ensName = ensMappedData[address] || address;
+                const reputation = importanceData.reputation[address];
+                return `${ensName} - Importance: ${importance}, Reputation: ${reputation}\n`;
+              })}
+            </pre>
           </div>
           <p>Importance:</p>
           <input
@@ -189,10 +202,9 @@ const StakingPopup: React.FC<StakingPopupProps> = ({ onStake, onClose }) => {
           <button onClick={handleVerifyImportance}>Verify Importance</button>
         </div>
 
-        <button onClick={handleMalicious}>submit malicious</button>
+        <button onClick={() => {}}>submit malicious</button>
       </Popup>
 
-      {/* 보상 결과 팝업 */}
       {rewardPopup && (
         <Popup title="Staking Result" onClose={() => setRewardPopup(null)}>
           <p>{rewardPopup}</p>
