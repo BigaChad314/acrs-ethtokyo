@@ -30,11 +30,10 @@ const NodeComponent: React.FC<NodeProps> = ({
     >
       <circle
         r={radius}
-        fill={isSelected ? "orange" : "lightblue"}
+        fill={isSelected ? "#48D2F0" : "#C1DAA9"}
         stroke="black"
         strokeWidth="2"
       />
-      {/* 원 안에 ID 표시 */}
       <text
         x="0"
         y="5" // y 좌표를 살짝 내려서 텍스트가 원의 중앙에 오도록 조정
@@ -44,14 +43,13 @@ const NodeComponent: React.FC<NodeProps> = ({
       >
         {node.id}
       </text>
+        {node.id}
       {showTooltip && (
         <foreignObject x={radius + 5} y={-radius - 10} width={100} height={60}>
           <div className={styles.tooltip}>
-            <p>
-              <strong>{node.address}</strong>
-            </p>
-            <p>Reputation: {node.reputation}</p>
-            <p>Importance: {node.importance}</p>
+            <p><strong>{`${node.address.slice(0, 6)}...${node.address.slice(-3)}`}</strong></p>
+            <p>Reputation: {Math.floor(node.reputation)}</p>
+            <p>Importance: {Math.floor(node.importance)}</p>
           </div>
         </foreignObject>
       )}

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import Popup from "./Popup";
 import { ethers } from "ethers";
 import { contractABI, contractAddress } from "../contractConfig";
+import styles from "../styles/Popup.module.css";
+
 
 interface ReputationPopupProps {
   nodeAddress: string;
@@ -41,25 +43,32 @@ const ReputationPopup: React.FC<ReputationPopupProps> = ({ nodeAddress, onSubmit
   };
 
   return (
-    <Popup title="Assign Reputation" onClose={onClose}>
-      <div>
-        <p>Assign reputation score to node: {nodeAddress}</p>
-        <input
-          type="number"
-          placeholder="Enter reputation score"
-          value={reputation}
-          onChange={(e) => {
-            const value = Number(e.target.value);
-            if (value >= 0 && value <= 100) {
-              setReputation(value);
-            }
-          }}
-          min={0}
-          max={100}
-        />
-        <input type="text" placeholder="Node address" value={nodeAddress} readOnly />
+    <Popup title="" onClose={onClose}>
+      <button className={styles.popupClose} onClick={onClose}>X</button> {/* Close 버튼을 "X"로 대체 */}
+      <div className={styles.headerRow}>
+      <div className={styles.recipientLabel}>Give Score To:</div>
+      <div className={styles.recipientName}>Test 1.eth</div>
       </div>
-      <button onClick={handleSubmit} disabled={isSubmitting}>
+      <hr className={styles.divider} />
+      <div className={styles.nodeInfo}>
+        <div className={styles.nodeLabel}>Address:</div>
+        <div className={styles.nodeValue}>{`${nodeAddress.slice(0, 6)}...${nodeAddress.slice(-3)}`}</div>
+      </div>
+      <input
+        type="number"
+        placeholder="Enter reputation score"
+        className={styles.scoreInputField}
+        value={reputation}
+        onChange={(e) => {
+          const value = Number(e.target.value);
+          if (value >= 0 && value <= 100) {
+            setReputation(value);
+          }
+        }}
+        min={0}
+        max={100}
+      />
+      <button className={styles.submitButton} onClick={handleSubmit} disabled={isSubmitting}>
         {isSubmitting ? "Submitting..." : "Submit"}
       </button>
     </Popup>

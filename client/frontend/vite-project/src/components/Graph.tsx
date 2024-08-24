@@ -5,7 +5,6 @@ import NodeComponent from "./Node";
 import EdgeComponent from "./Edge";
 import styles from "../styles/Graph.module.css";
 import ReputationPopup from "./ReputationPopup";
-import Popup from "./Popup";
 import ResultPopup from "./ResultPopup";
 
 interface GraphProps {
@@ -41,10 +40,12 @@ const Graph: React.FC<GraphProps> = ({ graph }) => {
     setIsResultPopupOpen(true);
   };
 
-  const showReputationPopup =() => {
+  const showReputationPopup = () => {
     setIsReputationPopupOpen(true);
     console.log("Reputation popup opened", isReputationPopupOpen);
   };
+
+  
 
   return (
     <div
@@ -90,45 +91,81 @@ const Graph: React.FC<GraphProps> = ({ graph }) => {
       </svg>
       {showSidebar && selectedNode && (
         <div className={styles.sidebar}>
-          <h3>Node Information</h3>
-          <p><strong>ID:</strong> {selectedNode.id}</p>
-          <p><strong>Address:</strong> {selectedNode.address}</p>
-          <p><strong>Reputation:</strong> {selectedNode.reputation}</p>
-          <p><strong>Importance:</strong> {selectedNode.importance}</p>
-          <h4>Given Scores:</h4>
-          <ul>
-            {selectedNode.givenScores.map((score, index) => (
-              <li key={index}>
-                To Node {score.from}: {score.score}
-              </li>
-            ))}
-          </ul>
-          <button onClick={(e) => {
-            e.stopPropagation();
-            showReputationPopup();
-          }}>
+          <h2 className={styles.sidebarTitle}>Node Information</h2>
+          <hr className={styles.divider} />
+          <div className={styles.infoRow}>
+            <div className={styles.infoLabel}>Node ID:</div>
+            <div className={styles.infoValue}>{selectedNode.id}</div>
+          </div>
+          <div className={styles.addressRow}>
+            <div className={styles.infoLabel}>Address:</div>
+            <div className={styles.infoValue}>
+            {`${selectedNode.address.slice(0, 6)}...${selectedNode.address.slice(-3)}`}
+            </div>
+          </div>
+          <hr className={styles.divider} />
+          <div className={styles.statsContainer}>
+            <div className={styles.statsLabels}>
+              <div>Importance:</div>
+              <div>Reputation:</div>
+            </div>
+            <div className={styles.statsValues}>
+              <div>{Math.floor(selectedNode.importance)}</div> {/* 소수점 제거 */}
+              <div>{Math.floor(selectedNode.reputation)}</div> {/* 소수점 제거 */}
+            </div>
+          </div>
+          <hr className={styles.divider} />
+          <h3 className={styles.reputationScore}>Given Scores</h3>
+          {(() => {
+      const scoreElements: JSX.Element[] = [];
+
+      // graph.edges에서 각 edge의 score 값을 출력
+      graph.edges.forEach((edge) => {
+        
+        if (edge.to === selectedNode.id) {
+          scoreElements.push(
+            <div className={styles.scoreRow} key={`${edge.from}-${edge.to}`}>
+              <div className={styles.scoreLabels}>
+                <div>From Node {edge.from}:</div> {/* From 노드 ID */}
+              </div>
+              <div className={styles.scoreValues}>
+                <div>{edge.score}</div> {/* 해당 에지의 Score 값 */}
+              </div>
+            </div>
+          );
+        }
+      });
+
+      return scoreElements;
+    })()}
+
+          <button
+            className={styles.scoreButton}
+            onClick={(e) => {
+              e.stopPropagation();
+              showReputationPopup();
+            }}
+          >
             Give Score
-          </button>         
-           </div>
+          </button>
+        </div>
       )}
 
-        {isReputationPopupOpen && (
-          <ReputationPopup
-            nodeAddress={selectedNode?.address || "N/A"}
-            onSubmit={handleReputationSubmit}
-            onClose={() => setIsReputationPopupOpen(false)}
-          />
-        )}
+      {isReputationPopupOpen && (
+        <ReputationPopup
+          nodeAddress={selectedNode?.address || "N/A"}
+          onSubmit={handleReputationSubmit}
+          onClose={() => setIsReputationPopupOpen(false)}
+        />
+      )}
 
-        {isResultPopupOpen && (
-          <ResultPopup
-            message={resultMessage}
-            onClose={() => setIsResultPopupOpen(false)}
-          />
-        )}
+      {isResultPopupOpen && (
+        <ResultPopup
+          message={resultMessage}
+          onClose={() => setIsResultPopupOpen(false)}
+        />
+      )}
     </div>
-
-    
   );
 };
 

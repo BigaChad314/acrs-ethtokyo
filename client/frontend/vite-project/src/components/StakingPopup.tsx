@@ -4,6 +4,8 @@ import { ethers } from "ethers";
 import { contractABI, contractAddress } from "../contractConfig";
 import axios from "axios";
 import { fetchGraphData } from "../hooks/fetchGraphData";
+import styles from "../styles/Popup.module.css";
+
 
 interface StakingPopupProps {
   onStake: (amount: number, merkleRoot: string) => void;
@@ -161,9 +163,10 @@ const StakingPopup: React.FC<StakingPopupProps> = ({ onStake, onClose }) => {
 
   return (
     <div>
-      <Popup title="Stake Your Tokens" onClose={onClose}>
+      <Popup title="" onClose={onClose}>
+      <button className={styles.popupClose} onClick={onClose}>X</button> {/* Close 버튼을 "X"로 대체 */}
         <div>
-          <p>Enter the amount to stake:</p>
+          <p>amount:</p>
           <input
             type="number"
             placeholder="Enter amount"

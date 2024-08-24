@@ -9,6 +9,8 @@ import { createThirdwebClient } from "thirdweb";
 import { ethers } from "ethers";
 import { contractABI, contractAddress } from "./contractConfig";
 import StakingPopup from "./components/StakingPopup";
+import "./App.css";
+
 
 const client = createThirdwebClient({
   clientId: "df016d8e33fef698ceca1452ed85d476",
@@ -108,40 +110,72 @@ const App: React.FC = () => {
 
   return (
     <ThirdwebProvider>
+<div
+        className="header"
+        style={{
+          backgroundColor: "rgba(45, 45, 45, 1)",
+          display: "flex",
+          width: "100%",
+          gap: "10px",
+          fontWeight: 700,
+          fontSize: "18px",
+          fontFamily: "Pretendard, sans-serif",
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+          padding: "0px 20px", // Reduced padding to half
+        }}
+      >      <div className="title" style={{ margin: "15px",
+        color: "white",
+      }}>
+        Anti Collusion Reputation System
+      </div>
       <ConnectButton
         client={client}
         wallets={wallets}
         theme={"dark"}
         connectModal={{ size: "wide" }}
       />
+      </div>
 
       <div
         style={{
           position: "relative",
           display: "inline-block",
           margin: "20px",
+
         }}
       >
         <button onClick={getSelectedNodes}>Selected Nodes</button>
-        {/* 버튼 아래에 선택된 노드를 툴팁처럼 표시 */}
-        {selectedNodes.length > 0 && (
-          <div
-            style={{
-              position: "absolute",
-              top: "40px",
-              left: "0",
-              backgroundColor: "#333",
-              color: "#fff",
-              padding: "5px",
-              borderRadius: "5px",
-              whiteSpace: "nowrap",
-              zIndex: 100,
-            }}
-          >
-            Selected Nodes: {selectedNodes.join(", ")}
+    {/* 버튼 아래에 선택된 노드를 툴팁처럼 표시 */}
+    {selectedNodes.length > 0 && (
+      <div
+      style={{
+        position: "absolute",
+        left: "110%",
+        top: "50%",
+        transform: "translateY(-50%)",
+        backgroundColor: "rgba(0, 0, 0, 0)",
+        color: "white",
+        padding: "10px",
+        borderRadius: "5px",
+        whiteSpace: "nowrap",
+        zIndex: 2,
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center", // Ensures nodes are aligned in the middle
+        gap: "10px", // Adds space between each node
+      }}
+        >
+
+        <div></div>
+        {selectedNodes.map((node, index) => (
+          <div key={index} style={{ marginTop: "5px" }}>
+            {node}
           </div>
-        )}
+        ))}
       </div>
+    )}
+    </div>
 
       <Router>
         <div>
